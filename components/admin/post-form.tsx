@@ -71,12 +71,60 @@ export function PostForm({
   });
 
   const titleValue = form.watch("title");
+  const statusValue = form.watch("status");
+  const publishedAtValue = form.watch("published_at");
+  const currentPostId = form.watch("id");
+  const isEditingExistingPost = Boolean(initialData?.id || currentPostId);
 
   useEffect(() => {
     if (!slugTouched && titleValue) {
       form.setValue("slug", slugify(titleValue), { shouldValidate: true });
     }
   }, [form, slugTouched, titleValue]);
+
+  const isPubliclyLive =
+    statusValue === "published" ||
+    (statusValue === "scheduled" &&
+      Boolean(publishedAtValue) &&
+      new Date(publishedAtValue || "").getTime() <= Date.now());
+
+  const submitLabel = isEditingExistingPost
+    ? statusValue === "draft"
+      ? "Update Draft"
+      : statusValue === "scheduled"
+        ? "Update Scheduled Post"
+        : "Update Published Post"
+    : statusValue === "draft"
+      ? "Save Draft"
+      : statusValue === "scheduled"
+        ? "Schedule Post"
+        : "Publish Post";
+
+  const modalTitle = isPubliclyLive
+    ? "Post Published"
+    : statusValue === "scheduled"
+      ? "Post Scheduled"
+      : "Draft Saved";
+
+  const modalDescription = isPubliclyLive
+    ? "The article is live on the public website."
+    : statusValue === "scheduled"
+      ? "The article is saved and will appear publicly when its publish time arrives."
+      : "The article is saved in draft and is not publicly visible yet.";
+
+  const modalWarning =
+    !initialData?.id && savedPost
+      ? "If you keep editing this form, you will update this same post. Use Write New Post to create a separate article."
+      : null;
+
+  const viewHref =
+    savedPost && isPubliclyLive
+      ? `/news/${savedPost.slug}`
+      : savedPost
+        ? `/admin/posts/${savedPost.id}/preview`
+        : "/admin/posts";
+
+  const viewLabel = isPubliclyLive ? "View Post" : "Preview Post";
 
   return (
     <form
@@ -94,7 +142,13 @@ export function PostForm({
                 slug: result.slug,
               });
             }
-            setStatusMessage("Post saved successfully.");
+            setStatusMessage(
+              statusValue === "draft"
+                ? "Draft saved successfully."
+                : statusValue === "scheduled"
+                  ? "Post scheduled successfully."
+                  : "Post published successfully.",
+            );
             setShowSuccessModal(true);
             router.refresh();
           } catch (error) {
@@ -309,7 +363,7 @@ export function PostForm({
             </Button>
           ) : null}
           <Button type="submit" disabled={isPending}>
-            {isPending ? "Saving..." : initialData?.id ? "Update Post" : "Publish Post"}
+            {isPending ? "Saving..." : submitLabel}
           </Button>
         </div>
       </div>
@@ -320,9 +374,13 @@ export function PostForm({
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.24em] text-secondary">
-                  Post Published
+                  {modalTitle}
                 </p>
                 <h3 className="mt-2 text-2xl font-black">What do you want to do next?</h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{modalDescription}</p>
+                {modalWarning ? (
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{modalWarning}</p>
+                ) : null}
               </div>
               <button
                 type="button"
@@ -336,8 +394,8 @@ export function PostForm({
 
             <div className="mt-6 grid gap-3">
               <Button asChild>
-                <Link href={`/news/${savedPost.slug}`} target="_blank" rel="noreferrer">
-                  View Post
+                <Link href={viewHref} target="_blank" rel="noreferrer">
+                  {viewLabel}
                 </Link>
               </Button>
               <Button
