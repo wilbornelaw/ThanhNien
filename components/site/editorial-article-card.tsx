@@ -18,13 +18,12 @@ export function EditorialArticleCard({
     <article className="group border-t border-border pt-5">
       {showImage && post.featured_image ? (
         <Link href={`/news/${post.slug}`} className="block">
-          <div className="overflow-hidden border border-border bg-muted">
+          <div className="relative aspect-[16/10] overflow-hidden border border-border bg-muted">
             <Image
               src={post.featured_image}
               alt={post.title}
-              width={1600}
-              height={900}
-              className="h-auto w-full object-contain transition duration-500 group-hover:scale-[1.01]"
+              fill
+              className="object-contain transition duration-500 group-hover:scale-[1.01]"
             />
           </div>
         </Link>
