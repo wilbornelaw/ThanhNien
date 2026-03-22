@@ -5,6 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { X } from "lucide-react";
 
 import { savePostAction } from "@/actions/posts";
 import { RichTextEditor } from "@/components/editor/rich-text-editor";
@@ -42,6 +43,10 @@ export function PostForm({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const [slugTouched, setSlugTouched] = useState(Boolean(initialData?.slug));
+  const [savedPost, setSavedPost] = useState<{ id: string; slug: string } | null>(
+    initialData?.id ? { id: initialData.id, slug: initialData.slug } : null,
+  );
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
@@ -81,9 +86,16 @@ export function PostForm({
 
         startTransition(async () => {
           try {
-            await savePostAction(values);
+            const result = await savePostAction(values);
+            if (result.postId) {
+              form.setValue("id", result.postId, { shouldDirty: false });
+              setSavedPost({
+                id: result.postId,
+                slug: result.slug,
+              });
+            }
             setStatusMessage("Post saved successfully.");
-            router.push("/admin/posts");
+            setShowSuccessModal(true);
             router.refresh();
           } catch (error) {
             setStatusMessage(error instanceof Error ? error.message : "Failed to save post.");
@@ -301,6 +313,47 @@ export function PostForm({
           </Button>
         </div>
       </div>
+
+      {showSuccessModal && savedPost ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 px-4">
+          <div className="w-full max-w-md border border-border bg-background p-6 shadow-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-secondary">
+                  Post Published
+                </p>
+                <h3 className="mt-2 text-2xl font-black">What do you want to do next?</h3>
+              </div>
+              <button
+                type="button"
+                aria-label="Close popup"
+                className="inline-flex h-10 w-10 items-center justify-center border border-border transition hover:bg-muted"
+                onClick={() => setShowSuccessModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-3">
+              <Button asChild>
+                <Link href={`/news/${savedPost.slug}`} target="_blank" rel="noreferrer">
+                  View Post
+                </Link>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  router.push("/admin/posts/new");
+                }}
+              >
+                Write New Post
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }

@@ -67,6 +67,7 @@ export async function savePostAction(payload: PostFormValues) {
   return {
     success: true,
     postId: data?.id,
+    slug: values.slug,
   };
 }
 
@@ -99,4 +100,3 @@ export async function incrementPostViewsAction(postId: string) {
     .update({ view_count: currentCount + 1 })
     .eq("id", postId);
 }
-
