@@ -138,8 +138,14 @@ export default async function ArticlePage({
         </header>
 
         {post.featured_image ? (
-          <div className="relative mt-8 aspect-[16/8.5] overflow-hidden border border-border bg-muted">
-            <Image src={post.featured_image} alt={post.title} fill className="object-cover" />
+          <div className="mt-8 overflow-hidden border border-border bg-muted">
+            <Image
+              src={post.featured_image}
+              alt={post.title}
+              width={1800}
+              height={1100}
+              className="h-auto w-full object-contain"
+            />
           </div>
         ) : null}
 

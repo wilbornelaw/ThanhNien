@@ -21,13 +21,16 @@ export function EditorialFeaturedStory({
       {post.featured_image ? (
         <Link
           href={`/news/${post.slug}`}
-          className={`relative overflow-hidden bg-muted ${compact ? "min-h-[108px]" : "min-h-[420px]"}`}
+          className={`overflow-hidden bg-muted ${compact ? "" : ""}`}
         >
           <Image
             src={post.featured_image}
             alt={post.title}
-            fill
-            className="object-cover transition duration-700 hover:scale-[1.03]"
+            width={1600}
+            height={900}
+            className={`w-full object-contain transition duration-700 hover:scale-[1.01] ${
+              compact ? "h-[108px]" : "h-auto"
+            }`}
           />
         </Link>
       ) : (
@@ -67,4 +70,3 @@ export function EditorialFeaturedStory({
     </article>
   );
 }
-
